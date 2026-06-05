@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  
+  <!-- Primary Meta Tags -->
+  <meta name="title" content="When Gradients Collide - Parth Darshan, Abhishek Divekar">
+  <meta name="description" content="Empirical study revealing two failure modes in multi-objective textual gradient optimization: gradient dilution (59% specificity drop) and instruction interference (-0.085 Spearman degradation).">
+  <meta name="keywords" content="multi-objective optimization, textual gradients, LLM judges, prompt optimization, TextGrad, gradient dilution, instruction interference">
+  <meta name="author" content="Parth Darshan, Abhishek Divekar">
+  <meta name="robots" content="index, follow">
+  <meta name="language" content="English">
+  
+  <!-- Open Graph / Facebook -->
+  <meta property="og:type" content="article">
+  <meta property="og:site_name" content="Multi-Objective Prompt Optimization">
+  <meta property="og:title" content="When Gradients Collide: Failure Modes of Multi-Objective Prompt Optimization for LLM Judges">
+  <meta property="og:description" content="Empirical study revealing two failure modes in multi-objective textual gradient optimization: gradient dilution (59% specificity drop) and instruction interference (-0.085 Spearman degradation).">
+  <meta property="og:url" content="https://when-gradients-collide.github.io">
+  <meta property="og:image" content="https://when-gradients-collide.github.io/static/images/social_preview.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="When Gradients Collide - Research Preview">
+  <meta property="article:published_time" content="2026-06-05T00:00:00.000Z">
+  <meta property="article:author" content="Parth Darshan">
+  <meta property="article:section" content="Research">
+  <meta property="article:tag" content="multi-objective optimization">
+  <meta property="article:tag" content="textual gradients">
+
+  <!-- Twitter -->
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@YourLabHandle">
+  <meta name="twitter:creator" content="@ParthDarshan">
+  <meta name="twitter:title" content="When Gradients Collide: Failure Modes of Multi-Objective Prompt Optimization for LLM Judges">
+  <meta name="twitter:description" content="Empirical study revealing two failure modes in multi-objective textual gradient optimization: gradient dilution (59% specificity drop) and instruction interference (-0.085 Spearman degradation).">
+  <meta name="twitter:image" content="https://when-gradients-collide.github.io/static/images/social_preview.png">
+  <meta name="twitter:image:alt" content="When Gradients Collide - Research Preview">
+
+  <!-- Academic/Research Specific -->
+  <meta name="citation_title" content="When Gradients Collide: Failure Modes of Multi-Objective Prompt Optimization for LLM Judges">
+  <meta name="citation_author" content="Darshan, Parth">
+  <meta name="citation_author" content="Divekar, Abhishek">
+  <meta name="citation_publication_date" content="2026">
+  <meta name="citation_conference_title" content="ACL 2026">
+  <meta name="citation_pdf_url" content="https://when-gradients-collide.github.io/static/pdfs/paper.pdf">
+  
+  <!-- Additional SEO -->
+  <meta name="theme-color" content="#ae0001">
+  <meta name="msapplication-TileColor" content="#ae0001">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  
+  <!-- Preconnect for performance -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link rel="preconnect" href="https://ajax.googleapis.com">
+  <link rel="preconnect" href="https://documentcloud.adobe.com">
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
+
+
+  <title>When Gradients Collide - Parth Darshan, Abhishek Divekar | Academic Research</title>
+  
+  <!-- Favicon and App Icons -->
+  <link rel="icon" type="image/x-icon" href="static/images/favicon.ico">
+  <link rel="apple-touch-icon" href="static/images/favicon.ico">
+  
+  <!-- Critical CSS - Load synchronously -->
+  <link rel="stylesheet" href="static/css/bulma.min.css">
+  <link rel="stylesheet" href="static/css/index.css">
+  
+  <!-- Non-critical CSS - Load asynchronously -->
+  <link rel="preload" href="static/css/bulma-carousel.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="static/css/bulma-slider.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="static/css/fontawesome.all.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  <link rel="preload" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css" as="style" onload="this.onload=null;this.rel='stylesheet'">
+  
+  <!-- Fallback for browsers that don't support preload -->
+  <noscript>
+    <link rel="stylesheet" href="static/css/bulma-carousel.min.css">
+    <link rel="stylesheet" href="static/css/bulma-slider.min.css">
+    <link rel="stylesheet" href="static/css/fontawesome.all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/gh/jpswalsh/academicons@1/css/academicons.min.css">
+  </noscript>
+  
+  <!-- Fonts - Optimized loading -->
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  
+  <!-- Defer non-critical JavaScript -->
+  <script defer src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+  <script defer src="https://documentcloud.adobe.com/view-sdk/main.js"></script>
+  <script defer src="static/js/fontawesome.all.min.js"></script>
+  <script defer src="static/js/bulma-carousel.min.js"></script>
+  <script defer src="static/js/bulma-slider.min.js"></script>
+  <script defer src="static/js/index.js"></script>
+  
+  <!-- Structured Data for Academic Papers -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "ScholarlyArticle",
+    "headline": "When Gradients Collide: Failure Modes of Multi-Objective Prompt Optimization for LLM Judges",
+    "description": "Empirical study revealing two failure modes in multi-objective textual gradient optimization: gradient dilution (59% specificity drop) and instruction interference (-0.085 Spearman degradation).",
+    "author": [
+      {
+        "@type": "Person",
+        "name": "Parth Darshan",
+        "affiliation": {
+          "@type": "Organization",
+          "name": "IIT Jodhpur"
+        }
+      },
+      {
+        "@type": "Person",
+        "name": "Abhishek Divekar",
+        "affiliation": {
+          "@type": "Organization",
+          "name": "Amazon"
+        }
+      }
+    ],
+    "datePublished": "2026-06-05",
+    "publisher": {
+      "@type": "Organization",
+      "name": "ACL 2026"
+    },
+    "url": "https://when-gradients-collide.github.io",
+    "image": "https://when-gradients-collide.github.io/static/images/social_preview.png",
+    "keywords": ["multi-objective optimization", "textual gradients", "LLM judges", "prompt optimization", "TextGrad"],
+    "abstract": "Customizing an LLM judge to a specific problem or domain often involves optimizing its prompt across multiple evaluation criteria simultaneously. Textual gradient methods automate this for a single judge criterion, however they produce natural-language critiques, not numerical vectors. Thus, the conflict-resolution toolkit of multi-task learning (PCGrad, MGDA) does not apply to this multi-objective textual gradient setting. We extend TextGrad to the multi-objective setting and test four decomposition modes of textual gradient optimizers by varying how much cross-objective information the loss, gradient and optimizer LLMs share. We find the gradient task-focus drops by 59% when the gradient LLM must provide feedback on multiple criteria jointly. Separately, we observe that naively combining single-objective optimized instructions into a single prompt degrades Spearman from 0.305 to 0.220. These results identify two separable failure modes: optimization-time gradient dilution and inference-time instruction interference.",
+    "citation": "darshan2026whengradientscollide",
+    "isAccessibleForFree": true,
+    "license": "https://creativecommons.org/licenses/by/4.0/",
+    "mainEntity": {
+      "@type": "WebPage",
+      "@id": "https://when-gradients-collide.github.io"
+    },
+    "about": [
+      {
+        "@type": "Thing",
+        "name": "Multi-objective Prompt Optimization"
+      },
+      {
+        "@type": "Thing", 
+        "name": "LLM-as-a-Judge Evaluation"
+      }
+    ]
+  }
+  </script>
+  
+  <!-- Website/Organization Structured Data -->
+  <script type="application/ld+json">
+  {
+    "@context": "https://schema.org",
+    "@type": "Organization",
+    "name": "Multi-Objective Prompt Optimization",
+    "url": "https://when-gradients-collide.github.io",
+    "logo": "https://when-gradients-collide.github.io/static/images/favicon.ico",
+    "sameAs": [
+      "https://twitter.com/YourLabHandle",
+      "https://github.com/when-gradients-collide"
+    ]
+  }
+  </script>
+</head>
+<body>
+
+
+  <!-- Scroll to Top Button -->
+  <button class="scroll-to-top" onclick="scrollToTop()" title="Scroll to top" aria-label="Scroll to top">
+    <i class="fas fa-chevron-up"></i>
+  </button>
+
+  <!-- More Works Dropdown -->
+  <div class="more-works-container">
+    <button class="more-works-btn" onclick="toggleMoreWorks()" title="View More Works from Our Lab">
+      <i class="fas fa-flask"></i>
+      More Works
+      <i class="fas fa-chevron-down dropdown-arrow"></i>
+    </button>
+    <div class="more-works-dropdown" id="moreWorksDropdown">
+      <div class="dropdown-header">
+        <h4>More Works from Our Lab</h4>
+        <button class="close-btn" onclick="toggleMoreWorks()">
+          <i class="fas fa-times"></i>
+        </button>
+      </div>
+      <div class="works-list">
+        <a href="https://arxiv.org/abs/2406.07496" class="work-item" target="_blank">
+          <div class="work-info">
+            <h5>TextGrad: Automatic Differentiation via Text</h5>
+            <p>Propagates natural-language critiques through LLM pipelines in analogy to backpropagation.</p>
+            <span class="work-venue">ICLR 2025</span>
+          </div>
+          <i class="fas fa-external-link-alt"></i>
+        </a>
+        <a href="https://arxiv.org/abs/2312.16755" class="work-item" target="_blank">
+          <div class="work-info">
+            <h5>OPRO: Large Language Models as Optimizers</h5>
+            <p>Rewrites prompts by conditioning on (prompt, score) histories via natural-language optimization.</p>
+            <span class="work-venue">ICLR 2024</span>
+          </div>
+          <i class="fas fa-external-link-alt"></i>
+        </a>
+        <a href="https://arxiv.org/abs/2405.01557" class="work-item" target="_blank">
+          <div class="work-info">
+            <h5>Prometheus 2: An Open-source Language Model Specialized in Evaluating Other LLMs</h5>
+            <p>Trained evaluator that scores based on user-provided custom evaluation criteria.</p>
+            <span class="work-venue">ACL Findings 2024</span>
+          </div>
+          <i class="fas fa-external-link-alt"></i>
+        </a>
+        <a href="https://arxiv.org/abs/2502.14552" class="work-item" target="_blank">
+          <div class="work-info">
+            <h5>CARO: Critique-Aggregation via Rubric-Oriented Decomposition</h5>
+            <p>Identifies rule dilution when heterogeneous error modes are aggregated in a single optimization step.</p>
+            <span class="work-venue">arXiv 2026</span>
+          </div>
+          <i class="fas fa-external-link-alt"></i>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <main id="main-content">
+  <section class="hero">
+    <div class="hero-body">
+      <div class="container is-max-desktop">
+        <div class="columns is-centered">
+          <div class="column has-text-centered">
+            <h1 class="title is-1 publication-title">When Gradients Collide: Failure Modes of Multi-Objective Prompt Optimization for LLM Judges</h1>
+            <div class="is-size-5 publication-authors">
+              <span class="author-block">
+                <a href="https://github.com/parthdarshan" target="_blank">Parth Darshan</a><sup>*</sup>,
+              </span>
+              <span class="author-block">
+                <a href="https://github.com/abhishekdivekar" target="_blank">Abhishek Divekar</a><sup>*†</sup>
+              </span>
+                  </div>
+
+                  <div class="is-size-5 publication-authors">
+                    <span class="author-block">IIT Jodhpur, Amazon<br>ACL 2026</span>
+                    <span class="eql-cntrb"><small><br><sup>*</sup>Equal Contribution. <sup>†</sup>Research Lead and Corresponding Author.</small></span>
+                  </div>
+
+                  <div class="column has-text-centered">
+                    <div class="publication-links">
+                      <span class="link-block">
+                        <a href="static/pdfs/paper.pdf" target="_blank" class="external-link button is-normal is-rounded is-dark">
+                          <span class="icon"><i class="fas fa-file-pdf"></i></span>
+                          <span>Paper</span>
+                        </a>
+                      </span>
+                      <span class="link-block">
+                        <a href="https://github.com/when-gradients-collide/when-gradients-collide" target="_blank" class="external-link button is-normal is-rounded is-dark">
+                          <span class="icon"><i class="fab fa-github"></i></span>
+                          <span>Code</span>
+                        </a>
+                      </span>
+                    </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+
+<!-- Paper abstract -->
+<section class="section hero is-light">
+  <div class="container is-max-desktop">
+    <div class="columns is-centered has-text-centered">
+      <div class="column is-four-fifths">
+        <h2 class="title is-3">Abstract</h2>
+        <div class="content has-text-justified">
+          <p>
+            Customizing an LLM judge to a specific problem or domain often involves optimizing its prompt across multiple evaluation criteria simultaneously. Textual gradient methods automate this for a single judge criterion, however they produce natural-language critiques, not numerical vectors. Thus, the conflict-resolution toolkit of multi-task learning (PCGrad, MGDA) does not apply to this multi-objective textual gradient setting. We extend TextGrad to the multi-objective setting and test four decomposition modes of textual gradient optimizers by varying how much cross-objective information the loss, gradient and optimizer LLMs share. We find the gradient's task-focus drops by 59% (9.0 to 3.7 out of 10) when the gradient LLM must provide feedback on multiple criteria jointly. Separately, we observe that naively combining single-objective optimized instructions into a single prompt degrades Spearman ρ from 0.305 to 0.220 (−0.085). These results identify two separable failure modes: optimization-time <em>gradient dilution</em> and inference-time <em>instruction interference</em>, which together constrain the design space for multi-objective judge optimization using textual feedback.
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+<!-- End paper abstract -->
+
+
+<!-- Image carousel -->
+<section class="hero is-small">
+  <div class="hero-body">
+    <div class="container">
+      <div id="results-carousel" class="carousel results-carousel">
+       <div class="item">
+        <img src="static/images/overview.jpg" alt="Multi-objective prompt optimization pipeline overview" loading="lazy"/>
+        <h2 class="subtitle has-text-centered">
+          Overview of the optimization pipeline with four decomposition modes (SSS, SSC, SCC, CCC).
+        </h2>
+      </div>
+      <div class="item">
+        <img src="static/images/trajectories-qwen3.png" alt="Optimization trajectories showing gradient dilution" loading="lazy"/>
+        <h2 class="subtitle has-text-centered">
+          Per-task Spearman ρ trajectories showing stagnation in multi-task modes.
+        </h2>
+      </div>
+      <div class="item">
+        <img src="static/images/gradient-specificity.png" alt="Gradient specificity scores by mode" loading="lazy"/>
+        <h2 class="subtitle has-text-centered">
+          Gradient specificity drops 59% when gradient LLM processes all tasks jointly.
+        </h2>
+      </div>
+      <div class="item">
+        <img src="static/images/trajectories-deepseek.png" alt="DeepSeek optimization trajectories" loading="lazy"/>
+        <h2 class="subtitle has-text-centered">
+          DeepSeek results confirm the same failure modes persist across model families.
+        </h2>
+      </div>
+    </div>
+</div>
+</div>
+</section>
+<!-- End image carousel -->
+
+
+
+
+
+
+
+
+
+
+
+<!--BibTex citation -->
+  <section class="section" id="BibTeX">
+    <div class="container is-max-desktop content">
+      <div class="bibtex-header">
+        <h2 class="title">BibTeX</h2>
+        <button class="copy-bibtex-btn" onclick="copyBibTeX()" title="Copy BibTeX to clipboard">
+          <i class="fas fa-copy"></i>
+          <span class="copy-text">Copy</span>
+        </button>
+      </div>
+      <pre id="bibtex-code"><code>@inproceedings{darshan2026whengradientscollide,
+  title={When Gradients Collide: Failure Modes of Multi-Objective Prompt Optimization for LLM Judges},
+  author={Darshan, Parth and Divekar, Abhishek},
+  booktitle={Proceedings of the 64th Annual Meeting of the Association for Computational Linguistics (ACL 2026)},
+  year={2026},
+  url={https://when-gradients-collide.github.io}
+}</code></pre>
+    </div>
+</section>
+<!--End BibTex citation -->
+
+
+  <footer class="footer">
+  <div class="container">
+    <div class="columns is-centered">
+      <div class="column is-8">
+        <div class="content">
+
+          <p>
+            This page was built using the <a href="https://github.com/eliahuhorwitz/Academic-project-page-template" target="_blank">Academic Project Page Template</a> which was adopted from the <a href="https://nerfies.github.io" target="_blank">Nerfies</a> project page.
+            You are free to borrow the source code of this website, we just ask that you link back to this page in the footer. <br> This website is licensed under a <a rel="license"  href="http://creativecommons.org/licenses/by-sa/4.0/" target="_blank">Creative
+            Commons Attribution-ShareAlike 4.0 International License</a>.
+          </p>
+
+        </div>
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- Statcounter tracking code -->
+  
+<!-- You can add a tracker to track page visits by creating an account at statcounter.com -->
+
+    <!-- End of Statcounter Code -->
+
+  </body>
+  </html>
