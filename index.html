@@ -106,7 +106,7 @@
               <span class="author-block"><sup>&#9671;</sup>IIT Jodhpur&nbsp;&nbsp;&nbsp;<sup>&#9824;</sup>Amazon</span>
             </div>
             <div class="is-size-5 publication-authors">
-              <span class="author-block"><strong>ACL 2026 &mdash; CustomNLP4U Workshop</strong></span>
+              <span class="author-block"><strong>ACL 2026 - CustomNLP4U Workshop</strong></span>
               <span class="eql-cntrb"><small><br><sup>*</sup>Equal Contribution.&nbsp;&nbsp;<sup>&#8224;</sup>Research Lead and Corresponding Author.</small></span>
             </div>
 
@@ -210,7 +210,28 @@
               The per-criterion breakdown reveals uneven dilution. Consistency is the most diluted: SCC scores 2.6 and CCC scores 2.4. Coherence retains more focus: SCC scores 4.8 and CCC scores 5.1. Joint gradients do not merely become uniformly worse; they become uneven, preserving generic writing-quality feedback while losing the criterion whose rubric is easiest to confuse with other dimensions.
             </p>
             <p>
-              <strong>Control diagnostic: the optimizer is not ignoring the gradients.</strong> Feedback adherence ranges from 7.76 to 8.84 across all modes, with standard deviations between 0.44 and 1.62. The optimizer incorporates whatever gradients it receives with high fidelity. The bottleneck is gradient quality, not optimizer compliance.
+              This finding extends the rule-dilution hypothesis of <a href="https://arxiv.org/abs/2606.07016" target="_blank">CARO</a> from the within-criterion to the cross-criterion setting. CARO shows that aggregating heterogeneous error modes in a single optimization step degrades rubric accuracy; we observe the analogous effect when multiple task gradients are combined in a single gradient call, degrading the per-task optimization signal.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section hero is-small">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered">
+        <div class="column is-full">
+          <div class="content">
+            <h2 class="title is-3 has-text-centered">Control Diagnostic: Feedback Adherence</h2>
+            <p>
+              A low-specificity gradient would not matter if the optimizer ignored it. To rule this out, we measure <em>feedback adherence</em>: whether the optimizer LLM incorporates the textual gradient's suggestions into the rewritten instruction. We score each rewrite on a 1&ndash;10 scale using Claude Sonnet 4.6 as the evaluator.
+            </p>
+            <p>
+              Adherence is uniformly high (7.8 to 8.8 on a 10-point scale) across all modes and validation settings. Single-Task achieves 8.70&plusmn;0.47 (MAE) and 8.53&plusmn;0.60 (no validation); SSS achieves 8.84&plusmn;0.44 and 8.72&plusmn;0.54; CCC achieves 7.90&plusmn;1.62 and 8.01&plusmn;1.28. The optimizer faithfully implements whatever gradient it receives, even when those suggestions are generic rather than criterion-specific.
+            </p>
+            <p>
+              This control localizes the failure: the ceiling on multi-objective judge prompt optimization is gradient quality, not optimizer compliance.
             </p>
           </div>
         </div>
@@ -231,7 +252,10 @@
               <img src="static/images/trajectories-both.png" alt="Per-task Spearman trajectories on SummEval for Qwen3 (top row) and DeepSeek v4 (bottom row), with MAE validation (left) and no validation (right), across the five decomposition modes" style="display:block; margin:0 auto; max-width:100%; height:auto;" loading="lazy" />
             </p>
             <p>
-              Per-task Spearman&nbsp;&rho; over 12 optimization steps (mean of 3 runs, shaded bands show min&ndash;max). <strong>Top row: Qwen3</strong> with MAE validation (left) and no validation (right). <strong>Bottom row: DeepSeek v4</strong> with the same validation conditions. Performance degrades as coupling increases: Single &gt; SSS &gt; SSC &gt; SCC &gt; CCC. A stronger backbone (DeepSeek) improves absolute scores but preserves the structural pattern.
+              Per-task Spearman&nbsp;&rho; over 12 optimization steps (mean of 3 runs, shaded bands show min&ndash;max). <strong>Top row: Qwen3</strong> with MAE validation (left) and no validation (right). <strong>Bottom row: DeepSeek v4</strong> with the same validation conditions. Without validation gating, performance degrades roughly as Single-Task &gt; SSS &gt; SSC &gt; SCC &gt; CCC. Under MAE validation, the pattern is non-monotonic: CCC slightly outperforms SSC, suggesting that full coupling may occasionally produce complementary gradients that survive the validation gate. A stronger backbone (DeepSeek) improves absolute scores but preserves the structural pattern.
+            </p>
+            <p>
+              Despite stagnation in Spearman, the hypervolume indicator (HVI) shows an increasing trend. For CCC, HVI grows continuously, indicating that the optimizer discovers diverse specialist prompts that expand the Pareto front, even when no single prompt dominates the initialization on all four tasks. This mirrors findings from multi-objective prompt optimization literature, where expanding the Pareto front comes at modest per-objective cost.
             </p>
           </div>
         </div>
@@ -262,7 +286,10 @@
               </tbody>
             </table>
             <p>
-              The mechanism is <strong>instruction-length asymmetry</strong>. Optimization over-specifies some criteria (the fluency rubric expands to approximately 800 tokens) while leaving others terse (relevance stays at approximately 4 tokens). Packed into one prompt, the verbose instructions receive disproportionate attention at inference, overshadowing the brief ones. Individually good rubrics can hurt when combined, so interference cannot be fixed by better per-task optimization alone.
+              The mechanism is <strong>instruction-length asymmetry</strong>. Optimization over-specifies some criteria (the fluency rubric expands to approximately 800 tokens with detailed scoring anchors) while leaving others under-specified (the relevance instruction remains at approximately 4 tokens of the initial prompt). Packed into a single prompt, verbose instructions receive disproportionate attention relative to brief ones at inference time. Individually good rubrics can hurt when combined, so interference cannot be fixed by better per-task optimization alone.
+            </p>
+            <p>
+              This result strengthens a finding from <a href="https://arxiv.org/abs/2606.05442" target="_blank">RRD</a>, which shows that naive rubric construction degrades GPT-4o preference-judgment accuracy by 13 points on JudgeBench. RRD's result shows that <em>bad</em> rubrics hurt. Our result shows that individually <em>good</em> rubrics can hurt when combined, implying that instruction interference is not resolvable by improving per-task optimization alone.
             </p>
           </div>
         </div>
@@ -277,16 +304,58 @@
           <div class="content">
             <h2 class="title is-3 has-text-centered">What This Means for Custom LLM Judges</h2>
             <p>
-              For practitioners, the lesson is narrower than "do not optimize judge prompts." The two failure modes target different stages and require different mitigations.
+              For practitioners customizing judges to domain-specific criteria, these results indicate that architectural changes are required before the multi-objective setting can work reliably. Addressing either failure mode alone is insufficient.
             </p>
             <p>
-              If the gradient LLM sees all criteria at once, its feedback becomes less specific. A specificity-aware optimizer could detect this and fall back to per-criterion gradient calls when the score drops below a threshold. This addresses <strong>optimization-time gradient dilution</strong>.
+              <strong>For gradient dilution:</strong> conflict-aware gradient resolution adapted from numerical multi-task learning (<a href="https://arxiv.org/abs/2001.06782" target="_blank">PCGrad</a>, <a href="https://arxiv.org/abs/2105.12196" target="_blank">CAGrad</a>) could address dilution if textual gradients can be meaningfully embedded and projected. A specificity-aware router could fall back to per-task gradient calls when multi-task specificity drops below a threshold, capturing CCC's hypervolume gains without losing task focus.
             </p>
             <p>
-              If separately optimized instructions are concatenated into one prompt, they can interfere at inference time. A mitigation for this failure mode must control the prompt seen during scoring: for example, separate judge calls per criterion, length-normalized instruction synthesis, or attention masking that exposes only the relevant criterion instruction during each output field. This addresses <strong>inference-time instruction interference</strong>.
+              <strong>For instruction interference:</strong> separate judge calls per criterion eliminates interference but multiplies inference cost. Length-aware instruction synthesis that normalizes rubric length during optimization prevents verbose rubrics from dominating the attention budget. Next-token attention masking that exposes only the relevant criterion instruction during each output field eliminates interference at no cost.
             </p>
             <p>
               The diagnostics we provide (<em>gradient specificity</em> and <em>feedback adherence</em>) give a way to measure both failure modes, so future work can evaluate mitigations against the same yardstick.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section hero is-small">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered">
+        <div class="column is-full">
+          <div class="content">
+            <h2 class="title is-3 has-text-centered">Future Work</h2>
+            <p>
+              Our findings open several concrete directions.
+            </p>
+            <p>
+              <strong>Statistically reliable LLM diagnostics with PPI.</strong> Our diagnostics are LLM-judged, introducing evaluator bias. Prediction-Powered Inference (PPI) combines a small human-judged set with a large LLM-judged set to produce provably unbiased estimates. This would let us report the specificity gap as a confidence interval and scale diagnostics to hundreds of runs without scaling human annotation linearly.
+            </p>
+            <p>
+              <strong>Synthetic task generation for aligned criteria.</strong> Rather than treat the four SummEval criteria as fixed, persona-driven synthesis at billion-person scale and instruction-data generation with controlled diversity can produce synthetic objectives that are complementary for optimization. If the synthesized tasks are mutually aligned by construction, the combined gradient should suffer less semantic drift, raising gradient focus and potentially mitigating both failure modes at their source.
+            </p>
+            <p>
+              <strong>Multi-objective critics for agentic workflows.</strong> Multi-objective judge prompts could serve as critics in agentic LLM systems, where a critic must track several quality dimensions of tool-use trajectories at once. Applying our optimization pipeline to such critics raises an open question: do gradient dilution and instruction interference still emerge when criteria are tool-grounded and partially verifiable, or does verifiability yield more robust gradients?
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section hero is-small is-light">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered">
+        <div class="column is-full">
+          <div class="content">
+            <h2 class="title is-3 has-text-centered">Limitations</h2>
+            <p>
+              Our experiments are scoped to SummEval as it provides expert human annotations on four clearly separable criteria. Other benchmarks would validate our identified failure modes: BRIGHTER tests whether dilution scales with task count and crosses language boundaries; ASAP++ (per-trait essay-grading rubrics) tests whether the SCC to CCC gradient specificity cliff transfers beyond summarization; EMSCAD and GitBugs test heterogeneous classification criteria rather than ordinal quality scales.
+            </p>
+            <p>
+              Our sample size (N=3 runs) limits statistical power, and we restrict our claims to effect sizes that are robust at this sample size: the 59% specificity drop and the -0.085 cherry-pick degradation. Gradient specificity and feedback adherence are scored by an LLM evaluator, which introduces a potential confound. Other prompt optimization paradigms may exhibit different multi-task dynamics, though our diagnostics are algorithm-agnostic and can be applied to any textual gradient approach.
             </p>
           </div>
         </div>
