@@ -33,14 +33,14 @@
   <meta name="citation_author" content="Darshan, Parth">
   <meta name="citation_author" content="Divekar, Abhishek">
   <meta name="citation_publication_date" content="2026">
-  <meta name="citation_conference_title" content="ACL 2026">
+  <meta name="citation_conference_title" content="ACL 2026 - CustomNLP4U Workshop">
   <meta name="citation_pdf_url" content="https://arxiv.org/pdf/2605.26046">
   <meta name="citation_arxiv_id" content="2605.26046">
 
   <meta name="theme-color" content="#ae0001">
   <meta name="msapplication-TileColor" content="#ae0001">
 
-  <title>When Gradients Collide - Parth Darshan, Abhishek Divekar | ACL 2026</title>
+  <title>When Gradients Collide - Parth Darshan, Abhishek Divekar | ACL 2026 CustomNLP4U</title>
 
   <link rel="icon" type="image/x-icon" href="static/images/favicon.png">
   <link rel="apple-touch-icon" href="static/images/favicon.png">
@@ -76,7 +76,7 @@
       { "@type": "Person", "name": "Abhishek Divekar", "affiliation": { "@type": "Organization", "name": "Amazon" } }
     ],
     "datePublished": "2026-06-05",
-    "publisher": { "@type": "Organization", "name": "ACL 2026" },
+    "publisher": { "@type": "Organization", "name": "ACL 2026 - CustomNLP4U Workshop" },
     "url": "https://textgrad-failure-modes.github.io",
     "keywords": ["multi-objective optimization", "textual gradients", "LLM judges", "prompt optimization", "TextGrad"],
     "isAccessibleForFree": true,
@@ -155,7 +155,7 @@
       <div class="hero-body">
         <img src="static/images/overview.jpg" alt="Overview of the multi-objective TextGrad optimization pipeline" />
         <h2 class="subtitle has-text-centered" style="margin-top: 1.5rem;">
-          We extend <strong>TextGrad</strong> to optimize an LLM judge prompt across <strong>four evaluation criteria at once</strong>. Each step runs a 4-stage loop (task &rarr; loss &rarr; gradient &rarr; optimizer). By varying whether each stage processes tasks <strong>S</strong>eparately or <strong>C</strong>ombined, we get four decomposition modes (SSS, SSC, SCC, CCC). We find that combining criteria <em>breaks</em> the optimizer in two distinct ways.
+          LLM judges increasingly score text along multiple criteria at once. TextGrad can optimize a prompt for one criterion, but its "gradients" are natural-language edit suggestions, not numerical vectors. They cannot be projected, averaged, or constrained the way PCGrad or MGDA operate on vector gradients. <strong>This paper asks what happens when textual gradients are forced into the multi-objective setting.</strong> We find two separable failure modes: during optimization, jointly generated gradients lose criterion-specific information; during inference, individually optimized instructions interfere when packed into a single judge prompt.
         </h2>
       </div>
     </div>
@@ -181,15 +181,36 @@
       <div class="columns is-centered">
         <div class="column is-full">
           <div class="content">
+            <h2 class="title is-3 has-text-centered">Experimental Setup</h2>
+            <p>
+              We evaluate on <strong>SummEval</strong>, which provides expert annotations for four separable summary-evaluation criteria: fluency, relevance, coherence, and consistency. Each optimization step has three stages where the criteria can interact: the loss LLM, the gradient LLM, and the optimizer LLM. We encode each mode with three letters: <strong>S</strong> means the stage processes each criterion separately; <strong>C</strong> means the stage processes all four criteria jointly.
+            </p>
+            <p>
+              The four multi-objective modes are: <strong>SSS</strong> (all stages separate), <strong>SSC</strong> (loss and gradient separate, optimizer combined), <strong>SCC</strong> (only loss separate, gradient and optimizer combined), and <strong>CCC</strong> (all stages combined). We also include a <strong>Single-Task</strong> baseline where each criterion receives its own independent optimization run. This baseline is not a deployable one-prompt judge, but it measures the ceiling we would hope to approach if multi-objective coupling caused no damage. All experiments use N=3 independent runs per configuration over 12 optimization steps.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="section hero is-small is-light">
+    <div class="container is-max-desktop">
+      <div class="columns is-centered">
+        <div class="column is-full">
+          <div class="content">
             <h2 class="title is-3 has-text-centered">Failure Mode 1: Gradient Dilution</h2>
             <p>
-              The first failure happens <strong>during optimization</strong>. We measure each textual gradient for <em>task-focus</em>: how targeted its improvement suggestions are to a single criterion (scored 1&ndash;10 by an LLM evaluator). When the gradient LLM processes each task separately (modes Single, SSS, SSC), gradients are sharply focused, scoring a mean of <strong>9.0</strong>. But when it must reconcile feedback from all four criteria in one call (modes SCC, CCC), task-focus collapses to <strong>3.7</strong> &mdash; a <strong>59% drop with zero overlap</strong> between the two groups.
+              The first failure happens <strong>during optimization</strong>. We measure each textual gradient for <em>gradient specificity</em>: how targeted its improvement suggestions are to a single criterion (scored 1&ndash;10 by an LLM evaluator). When the gradient LLM processes each task separately (modes Single, SSS, SSC), gradients are sharply focused, scoring a mean of <strong>9.0</strong> (&plusmn;0.3). But when it must reconcile feedback from all four criteria in one call (modes SCC, CCC), specificity drops to <strong>3.7</strong> (&plusmn;0.5), a <strong>59% reduction with no overlap</strong> between the per-task and cross-task distributions.
             </p>
             <p>
               <img src="static/images/gradient-specificity.png" alt="Gradient specificity by decomposition mode, showing a 59% drop from per-task to cross-task modes" style="display:block; margin:0 auto; max-width:70%; height:auto;" loading="lazy" />
             </p>
             <p>
-              This is a structural cliff, not a model artifact: swapping the gradient LLM to a stronger model (DeepSeek-V4-Pro) reproduces the same SSC&rarr;SCC collapse. The optimizer still faithfully applies whatever gradient it receives (feedback adherence stays high at 7.7&ndash;8.8), which means the bottleneck is <strong>gradient quality, not optimizer compliance</strong>.
+              The per-criterion breakdown reveals uneven dilution. Consistency is the most diluted: SCC scores 2.6 and CCC scores 2.4. Coherence retains more focus: SCC scores 4.8 and CCC scores 5.1. Joint gradients do not merely become uniformly worse; they become uneven, preserving generic writing-quality feedback while losing the criterion whose rubric is easiest to confuse with other dimensions.
+            </p>
+            <p>
+              <strong>Control diagnostic: the optimizer is not ignoring the gradients.</strong> Feedback adherence ranges from 7.76 to 8.84 across all modes, with standard deviations between 0.44 and 1.62. The optimizer incorporates whatever gradients it receives with high fidelity. The bottleneck is gradient quality, not optimizer compliance.
             </p>
           </div>
         </div>
@@ -204,13 +225,13 @@
           <div class="content">
             <h2 class="title is-3 has-text-centered">Optimization Stagnates</h2>
             <p>
-              The downstream effect is stark. In <strong>6 of 10 configurations</strong>, optimization never beats the initial generic prompt (&ldquo;<em>Rate from 1 to 5</em>&rdquo;). Only single-task optimization with MAE validation meaningfully improves (+0.031 Spearman). Without a validation gate, multi-task modes actively <em>degrade</em>: SSC drops from 0.283 to 0.184 by step 7. With the gate, trajectories flatten rather than climb &mdash; the gate prevents collapse but cannot manufacture signal from diluted gradients.
+              The downstream effect is stark. In <strong>6 of 10 configurations</strong>, optimization never beats the initial generic prompt (&ldquo;<em>Rate from 1 to 5</em>&rdquo;). Only single-task optimization with MAE validation meaningfully improves (+0.031 Spearman). Without a validation gate, multi-task modes actively <em>degrade</em>: SSC drops from 0.283 to 0.184 by step 7. With the gate, trajectories flatten rather than climb: the gate prevents collapse but cannot manufacture signal from diluted gradients.
             </p>
             <p>
-              <img src="static/images/trajectories-qwen3.png" alt="Per-task Spearman trajectories on SummEval with Qwen3 across the five decomposition modes" style="display:block; margin:0 auto; max-width:100%; height:auto;" loading="lazy" />
+              <img src="static/images/trajectories-both.png" alt="Per-task Spearman trajectories on SummEval for Qwen3 (top row) and DeepSeek v4 (bottom row), with MAE validation (left) and no validation (right), across the five decomposition modes" style="display:block; margin:0 auto; max-width:100%; height:auto;" loading="lazy" />
             </p>
             <p>
-              Per-task Spearman&nbsp;&rho; over 12 optimization steps (mean of 3 runs, shaded bands show min&ndash;max). Top row applies MAE validation gating; bottom row has none. Performance degrades as coupling increases: Single &gt; SSS &gt; SSC &gt; SCC &gt; CCC.
+              Per-task Spearman&nbsp;&rho; over 12 optimization steps (mean of 3 runs, shaded bands show min&ndash;max). <strong>Top row: Qwen3</strong> with MAE validation (left) and no validation (right). <strong>Bottom row: DeepSeek v4</strong> with the same validation conditions. Performance degrades as coupling increases: Single &gt; SSS &gt; SSC &gt; SCC &gt; CCC. A stronger backbone (DeepSeek) improves absolute scores but preserves the structural pattern.
             </p>
           </div>
         </div>
@@ -228,7 +249,7 @@
               Gradient dilution explains why the cross-task modes fail. But why do the <em>per-task</em> modes (SSS, SSC) also stagnate, when their gradients are sharp and their edits faithful? The answer lives at <strong>inference time</strong>, not optimization time.
             </p>
             <p>
-              We run an oracle experiment: for each criterion, we pick the single best instruction across all single-task runs &mdash; the one with the highest held-out Spearman for that task &mdash; then combine the four oracle-optimal instructions into one prompt. Even these individually-best instructions <strong>degrade when combined</strong>, falling from 0.305 to <strong>0.220 average Spearman</strong> (&minus;0.085), strictly worse than the generic baseline.
+              We run an oracle experiment: for each criterion, we pick the single best instruction across all single-task runs, the one with the highest held-out Spearman for that task, then combine the four oracle-optimal instructions into one prompt. Even these individually-best instructions <strong>degrade when combined</strong>, falling from 0.305 to <strong>0.220 average Spearman</strong> (&minus;0.085), strictly worse than the generic baseline (0.284).
             </p>
             <table class="table is-bordered is-striped is-narrow is-hoverable" style="margin: 1.5rem auto;">
               <thead>
@@ -241,7 +262,7 @@
               </tbody>
             </table>
             <p>
-              The mechanism is <strong>instruction-length asymmetry</strong>. Optimization over-specifies some criteria (the fluency rubric balloons to ~800 tokens) while leaving others terse (relevance stays at ~4 tokens). Packed into one prompt, the verbose instructions hog the judge's attention budget at inference, drowning out the brief ones. Individually good rubrics can hurt when combined &mdash; so interference cannot be fixed by better per-task optimization alone.
+              The mechanism is <strong>instruction-length asymmetry</strong>. Optimization over-specifies some criteria (the fluency rubric expands to approximately 800 tokens) while leaving others terse (relevance stays at approximately 4 tokens). Packed into one prompt, the verbose instructions receive disproportionate attention at inference, overshadowing the brief ones. Individually good rubrics can hurt when combined, so interference cannot be fixed by better per-task optimization alone.
             </p>
           </div>
         </div>
@@ -254,15 +275,18 @@
       <div class="columns is-centered">
         <div class="column is-full">
           <div class="content">
-            <h2 class="title is-3 has-text-centered">DeepSeek v4: Same Failure Modes, Stronger Backbone</h2>
+            <h2 class="title is-3 has-text-centered">What This Means for Custom LLM Judges</h2>
             <p>
-              We replicate with <strong>DeepSeek v4</strong> (Flash as task LLM, Pro as loss/gradient/optimizer). The stronger model yields better absolute performance (initial ~0.38, best up to 0.43), and all modes improve from initialization. But the <em>structural pattern holds</em>: single-task achieves the largest gain (+0.117), while multi-task modes improve modestly (+0.026 to +0.039).
+              For practitioners, the lesson is narrower than "do not optimize judge prompts." The two failure modes target different stages and require different mitigations.
             </p>
             <p>
-              <img src="static/images/trajectories-deepseek.png" alt="DeepSeek v4 per-task Spearman trajectories" style="display:block; margin:0 auto; max-width:100%; height:auto;" loading="lazy" />
+              If the gradient LLM sees all criteria at once, its feedback becomes less specific. A specificity-aware optimizer could detect this and fall back to per-criterion gradient calls when the score drops below a threshold. This addresses <strong>optimization-time gradient dilution</strong>.
             </p>
             <p>
-              The gradient dilution cliff also persists: per-task modes score 8.8 specificity vs. 4.25 for joint-gradient modes &mdash; a 52% reduction. A better LLM lifts all boats but does not close the gap between single-objective and multi-objective optimization.
+              If separately optimized instructions are concatenated into one prompt, they can interfere at inference time. A mitigation for this failure mode must control the prompt seen during scoring: for example, separate judge calls per criterion, length-normalized instruction synthesis, or attention masking that exposes only the relevant criterion instruction during each output field. This addresses <strong>inference-time instruction interference</strong>.
+            </p>
+            <p>
+              The diagnostics we provide (<em>gradient specificity</em> and <em>feedback adherence</em>) give a way to measure both failure modes, so future work can evaluate mitigations against the same yardstick.
             </p>
           </div>
         </div>
