@@ -113,12 +113,6 @@
             <div class="column has-text-centered">
               <div class="publication-links">
                 <span class="link-block">
-                  <a href="https://arxiv.org/pdf/2605.26046" target="_blank" class="external-link button is-normal is-rounded is-dark">
-                    <span class="icon"><i class="fas fa-file-pdf"></i></span>
-                    <span>Paper</span>
-                  </a>
-                </span>
-                <span class="link-block">
                   <a href="https://arxiv.org/abs/2605.26046" target="_blank" class="external-link button is-normal is-rounded is-dark">
                     <span class="icon"><i class="ai ai-arxiv"></i></span>
                     <span>arXiv</span>
@@ -154,7 +148,7 @@
     <div class="container is-max-desktop">
       <div class="hero-body">
         <img src="static/images/overview.jpg" alt="Overview of the multi-objective TextGrad optimization pipeline" />
-        <h2 class="subtitle has-text-centered" style="margin-top: 1.5rem;">
+        <h2 class="subtitle has-text-left" style="margin-top: 1.5rem;">
           LLM judges increasingly score text along multiple criteria at once. TextGrad can optimize a prompt for one criterion, but its "gradients" are natural-language edit suggestions, not numerical vectors. They cannot be projected, averaged, or constrained the way PCGrad or MGDA operate on vector gradients. <strong>This paper asks what happens when textual gradients are forced into the multi-objective setting.</strong> We find two separable failure modes: during optimization, jointly generated gradients lose criterion-specific information; during inference, individually optimized instructions interfere when packed into a single judge prompt.
         </h2>
       </div>
@@ -212,26 +206,9 @@
             <p>
               This finding extends the rule-dilution hypothesis of <a href="https://arxiv.org/abs/2606.07016" target="_blank">CARO</a> from the within-criterion to the cross-criterion setting. CARO shows that aggregating heterogeneous error modes in a single optimization step degrades rubric accuracy; we observe the analogous effect when multiple task gradients are combined in a single gradient call, degrading the per-task optimization signal.
             </p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
-  <section class="section hero is-small">
-    <div class="container is-max-desktop">
-      <div class="columns is-centered">
-        <div class="column is-full">
-          <div class="content">
-            <h2 class="title is-3 has-text-centered">Control Diagnostic: Feedback Adherence</h2>
+            <h3 style="margin-top: 2rem; margin-bottom: 0.75rem;">Control Diagnostic: The Optimizer Is Not Ignoring the Gradients</h3>
             <p>
-              A low-specificity gradient would not matter if the optimizer ignored it. To rule this out, we measure <em>feedback adherence</em>: whether the optimizer LLM incorporates the textual gradient's suggestions into the rewritten instruction. We score each rewrite on a 1&ndash;10 scale using Claude Sonnet 4.6 as the evaluator.
-            </p>
-            <p>
-              Adherence is uniformly high (7.8 to 8.8 on a 10-point scale) across all modes and validation settings. Single-Task achieves 8.70&plusmn;0.47 (MAE) and 8.53&plusmn;0.60 (no validation); SSS achieves 8.84&plusmn;0.44 and 8.72&plusmn;0.54; CCC achieves 7.90&plusmn;1.62 and 8.01&plusmn;1.28. The optimizer faithfully implements whatever gradient it receives, even when those suggestions are generic rather than criterion-specific.
-            </p>
-            <p>
-              This control localizes the failure: the ceiling on multi-objective judge prompt optimization is gradient quality, not optimizer compliance.
+              A low-specificity gradient would not matter if the optimizer ignored it. To rule this out, we measure <em>feedback adherence</em>: whether the optimizer LLM incorporates the textual gradient's suggestions into the rewritten instruction (scored 1&ndash;10 by Claude Sonnet 4.6). Adherence is uniformly high (7.8 to 8.8 on a 10-point scale) across all modes and validation settings. Single-Task achieves 8.70&plusmn;0.47 (MAE) and 8.53&plusmn;0.60 (no validation); SSS achieves 8.84&plusmn;0.44 and 8.72&plusmn;0.54; CCC achieves 7.90&plusmn;1.62 and 8.01&plusmn;1.28. The optimizer faithfully implements whatever gradient it receives, even when those suggestions are generic rather than criterion-specific. This control localizes the failure: <strong>the ceiling on multi-objective judge prompt optimization is gradient quality, not optimizer compliance.</strong>
             </p>
           </div>
         </div>
@@ -246,7 +223,22 @@
           <div class="content">
             <h2 class="title is-3 has-text-centered">Optimization Stagnates</h2>
             <p>
-              The downstream effect is stark. In <strong>6 of 10 configurations</strong>, optimization never beats the initial generic prompt (&ldquo;<em>Rate from 1 to 5</em>&rdquo;). Only single-task optimization with MAE validation meaningfully improves (+0.031 Spearman). Without a validation gate, multi-task modes actively <em>degrade</em>: SSC drops from 0.283 to 0.184 by step 7. With the gate, trajectories flatten rather than climb: the gate prevents collapse but cannot manufacture signal from diluted gradients.
+              Gradient dilution and high feedback adherence are necessary conditions for explaining stagnation, but they do not by themselves predict how badly the optimization fails. To quantify the downstream effect, we turn to the optimization results. In <strong>6 of 10 configurations</strong>, optimization never beats the initial generic prompt (&ldquo;<em>Rate from 1 to 5</em>&rdquo;). The table below summarizes the results for all five modes under MAE validation (the full table with both validation settings is in the paper).
+            </p>
+            <table class="table is-bordered is-striped is-narrow is-hoverable" style="margin: 1.5rem auto;">
+              <thead>
+                <tr><th>Mode</th><th>Initial&nbsp;&rho;</th><th>Best&nbsp;&rho; (step)</th><th>&Delta;</th><th>HVI</th></tr>
+              </thead>
+              <tbody>
+                <tr><td><strong>Single-Task</strong></td><td>0.274</td><td><strong>0.305</strong> (2)</td><td><strong>+0.031</strong></td><td>---</td></tr>
+                <tr><td>SSS</td><td>0.284</td><td>0.284 (0)</td><td>+0.000</td><td>2.749</td></tr>
+                <tr><td>SSC</td><td>0.289</td><td>0.289 (0)</td><td>+0.000</td><td>2.832</td></tr>
+                <tr><td>SCC</td><td>0.282</td><td>0.282 (0)</td><td>+0.000</td><td>2.801</td></tr>
+                <tr><td>CCC</td><td>0.285</td><td>0.296 (9)</td><td>+0.012</td><td><strong>2.900</strong></td></tr>
+              </tbody>
+            </table>
+            <p>
+              Only single-task optimization with MAE validation meaningfully improves (+0.031 Spearman at step 2). Without a validation gate, multi-task modes actively <em>degrade</em>: SSC drops from 0.283 to 0.184 by step 7. With the gate, trajectories flatten rather than climb: the gate prevents collapse but cannot manufacture signal from diluted gradients.
             </p>
             <p>
               <img src="static/images/trajectories-both.png" alt="Per-task Spearman trajectories on SummEval for Qwen3 (top row) and DeepSeek v4 (bottom row), with MAE validation (left) and no validation (right), across the five decomposition modes" style="display:block; margin:0 auto; max-width:100%; height:auto;" loading="lazy" />
@@ -328,16 +320,7 @@
           <div class="content">
             <h2 class="title is-3 has-text-centered">Future Work</h2>
             <p>
-              Our findings open several concrete directions.
-            </p>
-            <p>
-              <strong>Statistically reliable LLM diagnostics with PPI.</strong> Our diagnostics are LLM-judged, introducing evaluator bias. Prediction-Powered Inference (PPI) combines a small human-judged set with a large LLM-judged set to produce provably unbiased estimates. This would let us report the specificity gap as a confidence interval and scale diagnostics to hundreds of runs without scaling human annotation linearly.
-            </p>
-            <p>
-              <strong>Synthetic task generation for aligned criteria.</strong> Rather than treat the four SummEval criteria as fixed, persona-driven synthesis at billion-person scale and instruction-data generation with controlled diversity can produce synthetic objectives that are complementary for optimization. If the synthesized tasks are mutually aligned by construction, the combined gradient should suffer less semantic drift, raising gradient focus and potentially mitigating both failure modes at their source.
-            </p>
-            <p>
-              <strong>Multi-objective critics for agentic workflows.</strong> Multi-objective judge prompts could serve as critics in agentic LLM systems, where a critic must track several quality dimensions of tool-use trajectories at once. Applying our optimization pipeline to such critics raises an open question: do gradient dilution and instruction interference still emerge when criteria are tool-grounded and partially verifiable, or does verifiability yield more robust gradients?
+              Our findings open several concrete directions. Prediction-Powered Inference (PPI) could combine a small human-judged set with a large LLM-judged set to produce provably unbiased estimates of gradient specificity and feedback adherence. Synthetic task generation via persona-driven synthesis could produce aligned criteria that reduce semantic drift in the gradient signal. Applying our diagnostics to multi-objective critics in agentic workflows (where criteria are tool-grounded and partially verifiable) would test whether verifiability yields more robust gradients.
             </p>
           </div>
         </div>
