@@ -328,24 +328,6 @@
     </div>
   </section>
 
-  <section class="section hero is-small is-light">
-    <div class="container is-max-desktop">
-      <div class="columns is-centered">
-        <div class="column is-full">
-          <div class="content">
-            <h2 class="title is-3 has-text-centered">Limitations</h2>
-            <p>
-              Our experiments are scoped to SummEval as it provides expert human annotations on four clearly separable criteria. Other benchmarks would validate our identified failure modes: BRIGHTER tests whether dilution scales with task count and crosses language boundaries; ASAP++ (per-trait essay-grading rubrics) tests whether the SCC to CCC gradient specificity cliff transfers beyond summarization; EMSCAD and GitBugs test heterogeneous classification criteria rather than ordinal quality scales.
-            </p>
-            <p>
-              Our sample size (N=3 runs) limits statistical power, and we restrict our claims to effect sizes that are robust at this sample size: the 59% specificity drop and the -0.085 cherry-pick degradation. Gradient specificity and feedback adherence are scored by an LLM evaluator, which introduces a potential confound. Other prompt optimization paradigms may exhibit different multi-task dynamics, though our diagnostics are algorithm-agnostic and can be applied to any textual gradient approach.
-            </p>
-          </div>
-        </div>
-      </div>
-    </div>
-  </section>
-
   <section class="section" id="BibTeX">
     <div class="container is-max-desktop content">
       <div class="bibtex-header">
